@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riepilogo — KanjiBaby</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:        #0f0e0d;
+      --paper:      #f5f0e8;
+      --paper2:     #ede7d9;
+      --vermillion: #c0392b;
+      --muted:      #8a7f72;
+      --border:     #2a2520;
+      --font-jp:    'Shippori Mincho', serif;
+      --font-mono:  'DM Mono', monospace;
+      --font-sans:  'Noto Sans JP', sans-serif;
+
+      /* level colors */
+      --l0: #1a1714;        /* mai visto — quasi nero */
+      --l1: #4a1a1a;        /* scarso — rosso scuro */
+      --l2: #3a3010;        /* medio — giallo scuro */
+      --l3: #0e3020;        /* buono — verde scuro */
+      --l4: #0a2535;        /* ottimo — blu scuro */
+
+      --l0t: #3a3530;
+      --l1t: #c0392b;
+      --l2t: #b8860b;
+      --l3t: #27ae60;
+      --l4t: #2980b9;
+    }
+
+    body {
+      background: var(--ink);
+      color: var(--paper);
+      font-family: var(--font-sans);
+      font-weight: 300;
+      min-height: 100vh;
+    }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: var(--ink);
+      z-index: 50;
+    }
+    .back-link {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--paper); }
+    .topnav-title {
+      font-family: var(--font-jp);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .topnav-right {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    /* ── CONTROLS ── */
+    .controls {
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Search */
+    .ctrl-search {
+      position: relative;
+      flex: 1;
+      min-width: 160px;
+      max-width: 280px;
+    }
+    .ctrl-search input {
+      width: 100%;
+      padding: 0.5rem 0.8rem 0.5rem 2.2rem;
+      background: #1a1714;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--paper);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .ctrl-search input:focus { border-color: var(--vermillion); }
+    .ctrl-search input::placeholder { color: var(--muted); }
+    .ctrl-search .s-icon {
+      position: absolute; left: 0.6rem; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted); font-size: 0.75rem;
+      pointer-events: none;
+    }
+
+    /* Filter buttons */
+    .filter-group {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .filter-btn:hover { color: var(--paper); border-color: var(--muted); }
+    .filter-btn.active { color: var(--paper); border-color: currentColor; }
+    .filter-btn .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      display: inline-block; flex-shrink: 0;
+    }
+    .filter-btn[data-level="all"]  { --dc: var(--muted); }
+    .filter-btn[data-level="0"] .dot { background: var(--l0t); }
+    .filter-btn[data-level="1"] .dot { background: var(--l1t); }
+    .filter-btn[data-level="2"] .dot { background: var(--l2t); }
+    .filter-btn[data-level="3"] .dot { background: var(--l3t); }
+    .filter-btn[data-level="4"] .dot { background: var(--l4t); }
+    .filter-btn[data-level="0"].active { color: var(--l0t); border-color: var(--l0t); }
+    .filter-btn[data-level="1"].active { color: var(--l1t); border-color: var(--l1t); }
+    .filter-btn[data-level="2"].active { color: var(--l2t); border-color: var(--l2t); }
+    .filter-btn[data-level="3"].active { color: var(--l3t); border-color: var(--l3t); }
+    .filter-btn[data-level="4"].active { color: var(--l4t); border-color: var(--l4t); }
+    .filter-btn[data-level="all"].active { color: var(--paper); border-color: var(--muted); }
+
+    /* Size slider */
+    .size-ctrl {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-family: var(--font-mono); font-size: 0.6rem; color: var(--muted);
+    }
+    .size-ctrl input[type=range] {
+      width: 70px; accent-color: var(--vermillion);
+      cursor: pointer;
+    }
+
+    /* Results count */
+    .ctrl-count {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    /* ── LEGEND ── */
+    .legend {
+      padding: 0.8rem 2rem;
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-family: var(--font-mono); font-size: 0.58rem; color: var(--muted);
+    }
+    .legend-swatch {
+      width: 10px; height: 10px; border-radius: 2px;
+    }
+
+    /* ── GRID ── */
+    .grid-wrap { padding: 1.5rem 2rem 4rem; }
+    #kanjiGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(var(--cell-size, 52px), 1fr));
+      gap: 3px;
+    }
+
+    .k-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-jp);
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.15s, filter 0.15s;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      font-size: calc(var(--cell-size, 52px) * 0.5);
+    }
+    .k-cell:hover {
+      transform: scale(1.18);
+      z-index: 10;
+      filter: brightness(1.4);
+    }
+
+    .k-cell[data-level="0"] { background: var(--l0); color: var(--l0t); border: 1px solid #252220; }
+    .k-cell[data-level="1"] { background: var(--l1); color: var(--l1t); }
+    .k-cell[data-level="2"] { background: var(--l2); color: var(--l2t); }
+    .k-cell[data-level="3"] { background: var(--l3); color: var(--l3t); }
+    .k-cell[data-level="4"] { background: var(--l4); color: var(--l4t); }
+
+    /* ── LOADING ── */
+    #loadingState {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 1rem;
+      padding: 5rem 2rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+    }
+    .loader {
+      width: 32px; height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--vermillion);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+      display: flex; gap: 2.5rem; flex-wrap: wrap;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-item { display: flex; flex-direction: column; gap: 0.15rem; }
+    .stat-val {
+      font-family: var(--font-jp);
+      font-size: 1.4rem; font-weight: 600;
+      line-height: 1;
+    }
+    .stat-lbl {
+      font-family: var(--font-mono);
+      font-size: 0.55rem; color: var(--muted);
+      letter-spacing: 0.18em; text-transform: uppercase;
+    }
+
+    @media (max-width: 600px) {
+      .topnav, .controls, .legend, .grid-wrap, .stats-row { padding-left: 1rem; padding-right: 1rem; }
+      .ctrl-count { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a href="index.html" class="back-link">← home</a>
+    <div class="topnav-title">覧 · Riepilogo</div>
+    <div class="topnav-right" id="topRight">–</div>
+  </nav>
+
+  <div id="loadingState">
+    <div class="loader"></div>
+    CARICAMENTO…
+  </div>
+
+  <div id="pageContent" style="display:none">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-item"><div class="stat-val" id="s-total">–</div><div class="stat-lbl">Totali</div></div>
+      <div class="stat-item"><div class="stat-val" id="s-seen">–</div><div class="stat-lbl">Visti</div></div>
+      <div class="stat-item" style="color:var(--l1t)"><div class="stat-val" id="s-l1">–</div><div class="stat-lbl">Scarsi</div></div>
+      <div class="stat-item" style="color:var(--l2t)"><div class="stat-val" id="s-l2">–</div><div class="stat-lbl">Medi</div></div>
+      <div class="stat-item" style="color:var(--l3t)"><div class="stat-val" id="s-l3">–</div><div class="stat-lbl">Buoni</div></div>
+      <div class="stat-item" style="color:var(--l4t)"><div class="stat-val" id="s-l4">–</div><div class="stat-lbl">Ottimi</div></div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+      <div class="ctrl-search">
+        <span class="s-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Cerca kanji / keyword…" />
+      </div>
+
+      <div class="filter-group">
+        <button class="filter-btn active" data-level="all" onclick="setFilter('all')">Tutti</button>
+        <button class="filter-btn" data-level="0" onclick="setFilter(0)"><span class="dot"></span>Mai visto</button>
+        <button class="filter-btn" data-level="1" onclick="setFilter(1)"><span class="dot"></span>Scarso</button>
+        <button class="filter-btn" data-level="2" onclick="setFilter(2)"><span class="dot"></span>Medio</button>
+        <button class="filter-btn" data-level="3" onclick="setFilter(3)"><span class="dot"></span>Buono</button>
+        <button class="filter-btn" data-level="4" onclick="setFilter(4)"><span class="dot"></span>Ottimo</button>
+      </div>
+
+      <div class="size-ctrl">
+        小
+        <input type="range" id="sizeSlider" min="32" max="90" value="52" oninput="resizeCells(this.value)" />
+        大
+      </div>
+
+      <div class="ctrl-count" id="ctrlCount"></div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--l0t)"></div>Mai visto</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--l1t)"></div>Scarso &lt;50%</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--l2t)"></div>Medio 50–75%</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--l3t)"></div>Buono 75–90%</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--l4t)"></div>Ottimo ≥90%</div>
+    </div>
+
+    <!-- GRID -->
+    <div class="grid-wrap">
+      <div id="kanjiGrid"></div>
+    </div>
+
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/db.js"></script>
+  <script>
+    let allKanji  = [];
+    let allStats  = {};
+    let activeFilter = 'all';
+    let searchQ   = '';
+
+    async function init() {
+      await loadDB();
+      allKanji = getActiveKanji();
+      allStats = getAllStats();
+
+      renderStats();
+      renderGrid();
+
+      document.getElementById('loadingState').style.display  = 'none';
+      document.getElementById('pageContent').style.display   = 'block';
+      document.getElementById('topRight').textContent        = allKanji.length + ' kanji';
+    }
+
+    function renderStats() {
+      const counts = [0,0,0,0,0];
+      for (const k of allKanji) {
+        const s = allStats[k.kanji];
+        counts[s ? s.level : 0]++;
+      }
+      document.getElementById('s-total').textContent = allKanji.length;
+      document.getElementById('s-seen').textContent  = allKanji.length - counts[0];
+      document.getElementById('s-l1').textContent    = counts[1];
+      document.getElementById('s-l2').textContent    = counts[2];
+      document.getElementById('s-l3').textContent    = counts[3];
+      document.getElementById('s-l4').textContent    = counts[4];
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('kanjiGrid');
+      const q    = searchQ.toLowerCase();
+
+      const filtered = allKanji.filter(k => {
+        if (q && !k.kanji.includes(q) && !k.keyword.toLowerCase().includes(q) &&
+            !k.on.toLowerCase().includes(q) && !k.kun.toLowerCase().includes(q)) return false;
+        if (activeFilter !== 'all') {
+          const s = allStats[k.kanji];
+          const lvl = s ? s.level : 0;
+          if (lvl !== activeFilter) return false;
+        }
+        return true;
+      });
+
+      document.getElementById('ctrlCount').textContent = filtered.length + ' kanji';
+
+      grid.innerHTML = filtered.map(k => {
+        const s   = allStats[k.kanji];
+        const lvl = s ? s.level : 0;
+        const pct = s && s.avg !== null ? Math.round(s.avg * 100) : 0;
+        return `<a
+          class="k-cell"
+          data-level="${lvl}"
+          href="kanji.html?k=${encodeURIComponent(k.kanji)}"
+          title="${k.keyword} · ${pct}%"
+        >${k.kanji}</a>`;
+      }).join('');
+    }
+
+    function setFilter(level) {
+      activeFilter = level;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.toggle('active', String(b.dataset.level) === String(level));
+      });
+      renderGrid();
+    }
+
+    function resizeCells(val) {
+      document.getElementById('kanjiGrid').style.setProperty('--cell-size', val + 'px');
+      document.documentElement.style.setProperty('--cell-size', val + 'px');
+    }
+
+    document.getElementById('searchInput').addEventListener('input', e => {
+      searchQ = e.target.value.trim();
+      renderGrid();
+    });
+
+    init();
+  </script>
+</body>
+</html>
