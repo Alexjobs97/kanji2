@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KanjiBaby</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    /* ── RESET & VARIABLES ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:       #0f0e0d;
+      --paper:     #f5f0e8;
+      --paper2:    #ede7d9;
+      --vermillion:#c0392b;
+      --vermillion2:#e74c3c;
+      --gold:      #b8860b;
+      --muted:     #8a7f72;
+      --border:    #d4cabc;
+      --white:     #faf8f4;
+
+      --font-jp:   'Shippori Mincho', serif;
+      --font-mono: 'DM Mono', monospace;
+      --font-sans: 'Noto Sans JP', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--ink);
+      color: var(--paper);
+      font-family: var(--font-sans);
+      font-weight: 300;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE OVERLAY ──────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────── */
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 2rem 3rem 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+    .logo-kanji {
+      font-family: var(--font-jp);
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      font-weight: 800;
+      color: var(--paper);
+      letter-spacing: -0.02em;
+      line-height: 0.9;
+    }
+    .logo-kanji span {
+      color: var(--vermillion);
+    }
+    .logo-sub {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-top: 0.6rem;
+    }
+
+    /* JOYO TOGGLE */
+    .header-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.5rem;
+      padding-top: 0.5rem;
+    }
+    .toggle-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .toggle-text {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .toggle-text.active { color: var(--paper); }
+    .toggle {
+      position: relative;
+      width: 44px; height: 24px;
+      cursor: pointer;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: #2a2520;
+      border: 1px solid #3a342e;
+      border-radius: 24px;
+      transition: background 0.3s;
+    }
+    .toggle-slider::after {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 3px; top: 3px;
+      background: var(--muted);
+      border-radius: 50%;
+      transition: transform 0.3s, background 0.3s;
+    }
+    .toggle input:checked ~ .toggle-slider { background: #3d1a17; border-color: var(--vermillion); }
+    .toggle input:checked ~ .toggle-slider::after { transform: translateX(20px); background: var(--vermillion); }
+
+    /* ── SEARCH BAR ─────────────────────────────────────── */
+    .search-section {
+      position: relative;
+      z-index: 10;
+      padding: 2.5rem 3rem 0;
+    }
+    .search-wrap {
+      position: relative;
+      max-width: 540px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 1.1rem; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+    #searchInput {
+      width: 100%;
+      padding: 0.85rem 1rem 0.85rem 2.8rem;
+      background: #1a1714;
+      border: 1px solid #2e2924;
+      border-radius: 6px;
+      color: var(--paper);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #searchInput::placeholder { color: var(--muted); }
+    #searchInput:focus {
+      border-color: var(--vermillion);
+      box-shadow: 0 0 0 3px rgba(192,57,43,0.12);
+    }
+
+    /* SEARCH RESULTS DROPDOWN */
+    #searchResults {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: #1e1b17;
+      border: 1px solid #2e2924;
+      border-radius: 6px;
+      max-height: 320px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+    }
+    #searchResults.show { display: block; }
+    .search-item {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 0.75rem 1.2rem;
+      cursor: pointer;
+      border-bottom: 1px solid #2a2520;
+      transition: background 0.15s;
+    }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover { background: #2a2520; }
+    .search-item-kanji {
+      font-family: var(--font-jp);
+      font-size: 1.8rem;
+      color: var(--paper);
+      width: 2.2rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .search-item-info { flex: 1; overflow: hidden; }
+    .search-item-keyword {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--vermillion);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .search-item-yomi {
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 0.1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .search-empty {
+      padding: 1.2rem;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ── HERO DIVIDER ───────────────────────────────────── */
+    .divider {
+      position: relative;
+      z-index: 10;
+      margin: 2.5rem 3rem 0;
+      height: 1px;
+      background: linear-gradient(to right, var(--vermillion), transparent 60%);
+    }
+
+    /* ── NAV CARDS ──────────────────────────────────────── */
+    .nav-section {
+      position: relative;
+      z-index: 10;
+      padding: 2.5rem 3rem 0;
+    }
+    .nav-section-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1px;
+      border: 1px solid #2a2520;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .nav-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.8rem;
+      background: #161310;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.25s;
+      overflow: hidden;
+    }
+    .nav-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--vermillion);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .nav-card:hover { background: #1e1a16; }
+    .nav-card:hover::before { opacity: 0.04; }
+
+    .card-number {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      margin-bottom: 1.2rem;
+    }
+    .card-kanji-deco {
+      font-family: var(--font-jp);
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: #2a2520;
+      position: absolute;
+      right: 1.2rem;
+      bottom: 0.8rem;
+      line-height: 1;
+      transition: color 0.25s, transform 0.3s;
+      pointer-events: none;
+    }
+    .nav-card:hover .card-kanji-deco {
+      color: #3a302a;
+      transform: scale(1.05) rotate(-3deg);
+    }
+    .card-title {
+      font-family: var(--font-jp);
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--paper);
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+    .card-desc {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.6;
+      position: relative;
+      max-width: 200px;
+    }
+    .card-arrow {
+      margin-top: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--vermillion);
+      position: relative;
+      transition: letter-spacing 0.2s;
+    }
+    .nav-card:hover .card-arrow { letter-spacing: 0.1em; }
+
+    /* ── STATS BAR ──────────────────────────────────────── */
+    .stats-section {
+      position: relative;
+      z-index: 10;
+      padding: 2.5rem 3rem;
+      display: flex;
+      gap: 3rem;
+      flex-wrap: wrap;
+    }
+    .stat-item { display: flex; flex-direction: column; gap: 0.25rem; }
+    .stat-value {
+      font-family: var(--font-jp);
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--paper);
+      line-height: 1;
+    }
+    .stat-value span { color: var(--vermillion); }
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    /* ── BIG DECORATIVE KANJI ───────────────────────────── */
+    .bg-kanji {
+      position: fixed;
+      right: -2rem;
+      bottom: -1rem;
+      font-family: var(--font-jp);
+      font-size: clamp(18rem, 30vw, 26rem);
+      font-weight: 800;
+      color: rgba(255,255,255,0.018);
+      pointer-events: none;
+      z-index: 1;
+      line-height: 1;
+      user-select: none;
+    }
+
+    /* ── MOBILE ─────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      header, .search-section, .divider,
+      .nav-section, .stats-section {
+        padding-left: 1.2rem;
+        padding-right: 1.2rem;
+      }
+      .cards-grid { grid-template-columns: 1fr 1fr; }
+      .stats-section { gap: 1.8rem; }
+    }
+    @media (max-width: 400px) {
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background decorative kanji (changes daily) -->
+  <div class="bg-kanji" id="bgKanji">漢</div>
+
+  <!-- ── HEADER ──────────────────────────────────────── -->
+  <header>
+    <div class="logo">
+      <div class="logo-kanji">漢字<span>Baby</span></div>
+      <div class="logo-sub">il tuo studio dei kanji</div>
+    </div>
+
+    <div class="header-controls">
+      <div class="toggle-label">Kanji non-Jōyō</div>
+      <div class="toggle-wrap">
+        <span class="toggle-text" id="joyo-off-label">Solo Jōyō</span>
+        <label class="toggle" title="Mostra/nascondi kanji non-Jōyō">
+          <input type="checkbox" id="joyoToggle" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-text active" id="joyo-on-label">Tutti</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── SEARCH ───────────────────────────────────────── -->
+  <section class="search-section">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Cerca kanji, keyword, lettura…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <div id="searchResults"></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── NAV CARDS ────────────────────────────────────── -->
+  <section class="nav-section">
+    <div class="nav-section-label">Modalità di studio</div>
+    <div class="cards-grid">
+
+      <a href="flashcard.html" class="nav-card">
+        <div class="card-number">01</div>
+        <div class="card-kanji-deco">読</div>
+        <div class="card-title">Flashcard</div>
+        <div class="card-desc">Lettura e significato con SRS intelligente. Studia prima i kanji che sbagli di più.</div>
+        <div class="card-arrow">→ inizia</div>
+      </a>
+
+      <a href="writing.html" class="nav-card">
+        <div class="card-number">02</div>
+        <div class="card-kanji-deco">書</div>
+        <div class="card-title">Scrittura</div>
+        <div class="card-desc">Esercitati a scrivere i kanji con il mouse o l'Apple Pencil.</div>
+        <div class="card-arrow">→ inizia</div>
+      </a>
+
+      <a href="review.html" class="nav-card">
+        <div class="card-number">03</div>
+        <div class="card-kanji-deco">覧</div>
+        <div class="card-title">Riepilogo</div>
+        <div class="card-desc">Tutti i kanji in una griglia colorata per livello di apprendimento.</div>
+        <div class="card-arrow">→ vedi tutti</div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ── STATS ─────────────────────────────────────────── -->
+  <section class="stats-section" id="statsSection">
+    <div class="stat-item">
+      <div class="stat-value" id="stat-total">–</div>
+      <div class="stat-label">Kanji totali</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="stat-studied">–</div>
+      <div class="stat-label">Studiati</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="stat-due">–</div>
+      <div class="stat-label">Da rivedere oggi</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="stat-mastered">–</div>
+      <div class="stat-label">Padronanza ≥90%</div>
+    </div>
+  </section>
+
+  <!-- ── SCRIPTS ───────────────────────────────────────── -->
+  <script src="js/storage.js"></script>
+  <script src="js/db.js"></script>
+  <script>
+    // ── Joyo toggle ───────────────────────────────────────
+    const joyoToggle = document.getElementById('joyoToggle');
+    joyoToggle.checked = !getJoyoFilter();        // checked = mostra tutti
+    joyoToggle.addEventListener('change', () => {
+      setJoyoFilter(!joyoToggle.checked);
+    });
+
+    // ── Stats ─────────────────────────────────────────────
+    async function renderStats() {
+      const db    = await loadDB();
+      const active = getActiveKanji();
+      const stats  = getAllStats();
+      const now    = new Date();
+
+      const srsDB  = JSON.parse(localStorage.getItem('kanjibaby_srs') || '{}');
+
+      let studied   = 0;
+      let mastered  = 0;
+      let due       = 0;
+
+      for (const k of active) {
+        const s = stats[k.kanji];
+        if (s && s.srsSeen > 0) {
+          studied++;
+          if (s.avg !== null && s.avg >= 0.9) mastered++;
+        }
+        const rec = srsDB[k.kanji];
+        if (!rec || new Date(rec.dueDate) <= now) due++;
+      }
+
+      document.getElementById('stat-total').textContent    = active.length;
+      document.getElementById('stat-studied').textContent  = studied;
+      document.getElementById('stat-due').innerHTML        = `<span>${due}</span>`;
+      document.getElementById('stat-mastered').textContent = mastered;
+    }
+
+    // ── Search ────────────────────────────────────────────
+    let searchTimer = null;
+    const searchInput   = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(doSearch, 180);
+    });
+    searchInput.addEventListener('focus', () => {
+      if (searchInput.value.trim()) doSearch();
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search-wrap')) {
+        searchResults.classList.remove('show');
+      }
+    });
+
+    async function doSearch() {
+      const q = searchInput.value.trim().toLowerCase();
+      if (!q) { searchResults.classList.remove('show'); return; }
+
+      const db = await loadDB();
+      const results = db.filter(k =>
+        k.kanji.includes(q) ||
+        k.keyword.toLowerCase().includes(q) ||
+        k.on.toLowerCase().includes(q) ||
+        k.kun.toLowerCase().includes(q) ||
+        k.meanings.toLowerCase().includes(q)
+      ).slice(0, 12);
+
+      if (!results.length) {
+        searchResults.innerHTML = `<div class="search-empty">Nessun risultato per "${q}"</div>`;
+      } else {
+        searchResults.innerHTML = results.map(k => `
+          <div class="search-item" onclick="goToKanji('${encodeURIComponent(k.kanji)}')">
+            <div class="search-item-kanji">${k.kanji}</div>
+            <div class="search-item-info">
+              <div class="search-item-keyword">${k.keyword}</div>
+              <div class="search-item-yomi">${[k.on, k.kun].filter(Boolean).join('　·　')}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+      searchResults.classList.add('show');
+    }
+
+    function goToKanji(encodedKanji) {
+      window.location.href = `kanji.html?k=${encodedKanji}`;
+    }
+
+    // ── BG kanji decorativo (cambia ogni ora) ─────────────
+    async function setBgKanji() {
+      const db = await loadDB();
+      if (!db.length) return;
+      const idx = Math.floor(Date.now() / 3_600_000) % db.length;
+      document.getElementById('bgKanji').textContent = db[idx].kanji;
+    }
+
+    // ── Init ──────────────────────────────────────────────
+    initSync().then(() => loadDB()).then(() => {
+      renderStats();
+      setBgKanji();
+    });
+  </script>
+</body>
+</html>
