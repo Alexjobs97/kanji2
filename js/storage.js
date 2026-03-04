@@ -13,7 +13,7 @@
 //  4. Salvataggio mnemonico → flush immediato
 // ============================================================
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx6BZiVYLag8wg8jQKAQkxwHcJ2Ifvozr0kFPPp1He70-PikEo5Vt-NLc0kcQhsflw/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzI3xt-ql53uJvJB7biBFYIFGJ3CP5-tqIl2x5EIXmMXTpX38jOAQzyPc5fDrkLacPYZQ/exec";
 
 const STORAGE_PREFIX = "kanjibaby_";
 const KEY_SRS        = STORAGE_PREFIX + "srs";
