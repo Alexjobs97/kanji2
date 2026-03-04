@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Riepilogo — KanjiBaby</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Hina+Mincho&family=Klee+One&family=Zen+Kurenaido&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --ink:#0f0e0d; --paper:#f5f0e8; --paper2:#d8d0c4;
+      --vermillion:#c0392b; --gold:#b8860b;
+      --muted:#9a9088; --border:#333028; --card-bg:#1c1915;
+      --l0:#1a1714; --l1:#4a1a1a; --l2:#3a3010; --l3:#0e3020; --l4:#0a2535;
+      --l0t:#5a5048; --l1t:#e05545; --l2t:#c8960c; --l3t:#2ecc71; --l4t:#3498db;
+      --font-jp:'Shippori Mincho',serif; --font-mono:'DM Mono',monospace; --font-sans:'Noto Sans JP',sans-serif;
+    }
+    :root[data-font="hina"]{--font-jp:'Hina Mincho',serif;}
+    :root[data-font="klee"]{--font-jp:'Klee One',cursive;}
+    :root[data-font="zen"] {--font-jp:'Zen Kurenaido',sans-serif;}
+    :root[data-theme="light"]{
+      --ink:#f0ebe0; --paper:#1a1714; --paper2:#3a3228;
+      --border:#c8bfb0; --card-bg:#e8e0d4; --muted:#6a5f52;
+      --l0:#ddd5c8; --l1:#f8d8d5; --l2:#f8f0d0; --l3:#d0f0e0; --l4:#d0e8f8;
+    }
+    body{background:var(--ink);color:var(--paper);font-family:var(--font-sans);font-weight:300;min-height:100vh;}
+
+    .topnav{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--ink);z-index:50;}
+    .back-link{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);text-decoration:none;letter-spacing:.1em;transition:color .2s;}
+    .back-link:hover{color:var(--paper);}
+    .topnav-title{font-family:var(--font-jp);font-size:1rem;font-weight:600;}
+
+    .controls{padding:1rem 2rem;display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;border-bottom:1px solid var(--border);}
+    .ctrl-search{position:relative;flex:1;min-width:140px;max-width:260px;}
+    .ctrl-search input{width:100%;padding:.5rem .8rem .5rem 2.1rem;background:var(--card-bg);border:1px solid var(--border);border-radius:5px;color:var(--paper);font-family:var(--font-mono);font-size:.75rem;outline:none;transition:border-color .2s;}
+    .ctrl-search input:focus{border-color:var(--vermillion);}
+    .ctrl-search input::placeholder{color:var(--muted);}
+    .ctrl-search .s-icon{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.75rem;pointer-events:none;}
+    .filter-group{display:flex;gap:.4rem;flex-wrap:wrap;}
+    .filter-btn{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.1em;padding:.35rem .7rem;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:.35rem;}
+    .filter-btn:hover{color:var(--paper);border-color:var(--muted);}
+    .filter-btn.active{color:var(--paper);border-color:currentColor;}
+    .filter-btn .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
+    .filter-btn[data-level="0"].active{color:var(--l0t);border-color:var(--l0t);}
+    .filter-btn[data-level="1"].active{color:var(--l1t);border-color:var(--l1t);}
+    .filter-btn[data-level="2"].active{color:var(--l2t);border-color:var(--l2t);}
+    .filter-btn[data-level="3"].active{color:var(--l3t);border-color:var(--l3t);}
+    .filter-btn[data-level="4"].active{color:var(--l4t);border-color:var(--l4t);}
+    .size-ctrl{display:flex;align-items:center;gap:.5rem;font-family:var(--font-mono);font-size:.6rem;color:var(--muted);}
+    .size-ctrl input[type=range]{width:70px;accent-color:var(--vermillion);cursor:pointer;}
+    .ctrl-count{font-family:var(--font-mono);font-size:.65rem;color:var(--muted);margin-left:auto;}
+
+    .legend{padding:.7rem 2rem;display:flex;gap:1.2rem;flex-wrap:wrap;border-bottom:1px solid var(--border);}
+    .legend-item{display:flex;align-items:center;gap:.4rem;font-family:var(--font-mono);font-size:.58rem;color:var(--muted);}
+    .legend-swatch{width:10px;height:10px;border-radius:2px;}
+
+    .stats-row{display:flex;gap:2rem;flex-wrap:wrap;padding:.9rem 2rem;border-bottom:1px solid var(--border);}
+    .stat-item{display:flex;flex-direction:column;gap:.1rem;}
+    .stat-val{font-family:var(--font-jp);font-size:1.3rem;font-weight:600;line-height:1;}
+    .stat-lbl{font-family:var(--font-mono);font-size:.55rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;}
+
+    .grid-wrap{padding:1.5rem 2rem 4rem;}
+    #kanjiGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--cell-size,52px),1fr));gap:3px;}
+    .k-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-family:var(--font-jp);font-weight:600;border-radius:4px;cursor:pointer;transition:transform .15s,filter .15s;text-decoration:none;position:relative;font-size:calc(var(--cell-size,52px)*.5);}
+    .k-cell:hover{transform:scale(1.18);z-index:10;filter:brightness(1.3);}
+    .k-cell[data-level="0"]{background:var(--l0);color:var(--l0t);border:1px solid #2a2520;}
+    .k-cell[data-level="1"]{background:var(--l1);color:var(--l1t);}
+    .k-cell[data-level="2"]{background:var(--l2);color:var(--l2t);}
+    .k-cell[data-level="3"]{background:var(--l3);color:var(--l3t);}
+    .k-cell[data-level="4"]{background:var(--l4);color:var(--l4t);}
+
+    /* ── MODAL KANJI DETAIL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
+    .modal-overlay.show{display:flex;}
+    .modal{background:var(--ink);border:1px solid var(--border);border-radius:12px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;}
+    :root[data-theme="light"] .modal{background:var(--card-bg);}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);}
+    .modal-kanji{font-family:var(--font-jp);font-size:2.5rem;font-weight:800;color:var(--paper);}
+    .modal-keyword{font-family:var(--font-jp);font-size:1.1rem;font-weight:600;color:var(--vermillion);}
+    .modal-close{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:4px;padding:.3rem .7rem;cursor:pointer;transition:all .2s;}
+    .modal-close:hover{color:var(--paper);border-color:var(--muted);}
+    .modal-body{padding:1.2rem 1.5rem;display:flex;flex-direction:column;gap:1rem;}
+    .modal-section{display:flex;flex-direction:column;gap:.35rem;}
+    .modal-label{font-family:var(--font-mono);font-size:.55rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;}
+    .modal-value{font-family:var(--font-jp);font-size:.95rem;color:var(--paper);line-height:1.5;}
+    .reading-tag{display:inline-block;background:var(--card-bg);border:1px solid var(--border);border-radius:3px;padding:.12rem .45rem;margin:.1rem .12rem .1rem 0;font-size:.88rem;}
+    /* Parole in modal — stile kanjiapi */
+    .modal-words{display:flex;flex-direction:column;gap:.4rem;}
+    .modal-word-row{display:flex;align-items:baseline;gap:.8rem;padding:.45rem .7rem;border-radius:5px;border:1px solid var(--border);background:var(--card-bg);transition:border-color .2s;}
+    .modal-word-row:hover{border-color:var(--gold);}
+    .mwr-word{font-family:var(--font-jp);font-size:1.15rem;font-weight:600;color:var(--paper);text-decoration:none;flex-shrink:0;min-width:3rem;transition:color .2s;}
+    .mwr-word:hover{color:var(--gold);}
+    .mwr-info{flex:1;display:flex;flex-direction:column;gap:.1rem;}
+    .mwr-reading{font-family:var(--font-jp);font-size:.78rem;color:var(--vermillion);}
+    .mwr-meaning{font-family:var(--font-sans);font-size:.72rem;color:var(--paper2);line-height:1.4;}
+    /* Mnemonico in modal */
+    .modal-mnemonic-box{font-family:var(--font-mono);font-size:.78rem;color:var(--paper);background:var(--card-bg);border:1px solid var(--border);border-radius:5px;padding:.6rem .8rem;line-height:1.5;white-space:pre-wrap;}
+    .modal-mnemonic-add{font-family:var(--font-mono);font-size:.65rem;color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:.3rem .7rem;background:none;cursor:pointer;transition:all .2s;}
+    .modal-mnemonic-add:hover{color:var(--paper);border-color:var(--muted);}
+    .modal-mnemonic-textarea{display:none;flex-direction:column;gap:.4rem;}
+    .modal-mnemonic-textarea.show{display:flex;}
+    .modal-mnemonic-textarea textarea{width:100%;min-height:60px;background:var(--card-bg);border:1px solid var(--border);border-radius:5px;color:var(--paper);font-family:var(--font-mono);font-size:.76rem;padding:.6rem .8rem;outline:none;resize:vertical;transition:border-color .2s;}
+    .modal-mnemonic-textarea textarea:focus{border-color:var(--vermillion);}
+    .modal-actions{display:flex;gap:.6rem;padding:1rem 1.5rem;border-top:1px solid var(--border);}
+    .modal-btn{font-family:var(--font-mono);font-size:.7rem;padding:.55rem 1.1rem;border-radius:5px;border:1px solid var(--border);background:var(--card-bg);color:var(--paper);text-decoration:none;cursor:pointer;transition:all .2s;}
+    .modal-btn:hover{background:#2a2520;border-color:var(--muted);}
+    .modal-btn.primary{background:var(--vermillion);border-color:var(--vermillion);}
+    .modal-btn.primary:hover{background:#a93226;}
+
+    #loadingState{display:flex;flex-direction:column;align-items:center;gap:1rem;padding:5rem 2rem;color:var(--muted);font-family:var(--font-mono);font-size:.75rem;letter-spacing:.15em;}
+    .loader{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--vermillion);border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    @media(max-width:600px){.topnav,.controls,.legend,.grid-wrap,.stats-row{padding-left:1rem;padding-right:1rem;}.ctrl-count{margin-left:0;}}
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="index.html" class="back-link">← home</a>
+  <div class="topnav-title">覧 · Riepilogo</div>
+  <div id="topRight" style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted)">–</div>
+</nav>
+
+<div id="loadingState"><div class="loader"></div>CARICAMENTO…</div>
+
+<div id="pageContent" style="display:none">
+  <div class="stats-row">
+    <div class="stat-item"><div class="stat-val" id="s-total">–</div><div class="stat-lbl">Totali</div></div>
+    <div class="stat-item"><div class="stat-val" id="s-seen">–</div><div class="stat-lbl">Visti</div></div>
+    <div class="stat-item" style="color:var(--l1t)"><div class="stat-val" id="s-l1">–</div><div class="stat-lbl">Scarsi</div></div>
+    <div class="stat-item" style="color:var(--l2t)"><div class="stat-val" id="s-l2">–</div><div class="stat-lbl">Medi</div></div>
+    <div class="stat-item" style="color:var(--l3t)"><div class="stat-val" id="s-l3">–</div><div class="stat-lbl">Buoni</div></div>
+    <div class="stat-item" style="color:var(--l4t)"><div class="stat-val" id="s-l4">–</div><div class="stat-lbl">Ottimi</div></div>
+  </div>
+  <div class="controls">
+    <div class="ctrl-search"><span class="s-icon">🔍</span><input type="text" id="searchInput" placeholder="Cerca kanji / keyword…"/></div>
+    <div class="filter-group">
+      <button class="filter-btn active" data-level="all"  onclick="setFilter('all')">Tutti</button>
+      <button class="filter-btn" data-level="0" onclick="setFilter(0)"><span class="dot" style="background:var(--l0t)"></span>Mai visto</button>
+      <button class="filter-btn" data-level="1" onclick="setFilter(1)"><span class="dot" style="background:var(--l1t)"></span>Scarso</button>
+      <button class="filter-btn" data-level="2" onclick="setFilter(2)"><span class="dot" style="background:var(--l2t)"></span>Medio</button>
+      <button class="filter-btn" data-level="3" onclick="setFilter(3)"><span class="dot" style="background:var(--l3t)"></span>Buono</button>
+      <button class="filter-btn" data-level="4" onclick="setFilter(4)"><span class="dot" style="background:var(--l4t)"></span>Ottimo</button>
+    </div>
+    <div class="size-ctrl">小<input type="range" id="sizeSlider" min="32" max="90" value="52" oninput="resizeCells(this.value)"/>大</div>
+    <div class="ctrl-count" id="ctrlCount"></div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--l0t)"></div>Mai visto</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--l1t)"></div>Scarso &lt;50%</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--l2t)"></div>Medio 50–75%</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--l3t)"></div>Buono 75–90%</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--l4t)"></div>Ottimo ≥90%</div>
+  </div>
+  <div class="grid-wrap"><div id="kanjiGrid"></div></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/db.js"></script>
+<script>
+  initSync();
+
+  let allKanji=[], allStats={}, activeFilter='all', searchQ='';
+
+  async function init() {
+    await loadDB();
+    allKanji = getActiveKanji();
+    allStats = getAllStats();
+    renderStats(); renderGrid();
+    document.getElementById('loadingState').style.display='none';
+    document.getElementById('pageContent').style.display='block';
+    document.getElementById('topRight').textContent = allKanji.length+' kanji';
+  }
+
+  function renderStats() {
+    const counts=[0,0,0,0,0];
+    for(const k of allKanji){ const s=allStats[k.kanji]; counts[s?s.level:0]++; }
+    document.getElementById('s-total').textContent=allKanji.length;
+    document.getElementById('s-seen').textContent=allKanji.length-counts[0];
+    document.getElementById('s-l1').textContent=counts[1];
+    document.getElementById('s-l2').textContent=counts[2];
+    document.getElementById('s-l3').textContent=counts[3];
+    document.getElementById('s-l4').textContent=counts[4];
+  }
+
+  function renderGrid() {
+    const grid=document.getElementById('kanjiGrid');
+    const q=searchQ.toLowerCase();
+    const filtered=allKanji.filter(k=>{
+      if(q&&!k.kanji.includes(q)&&!k.keyword.toLowerCase().includes(q)&&
+         !k.on.toLowerCase().includes(q)&&!k.kun.toLowerCase().includes(q)) return false;
+      if(activeFilter!=='all'){ const s=allStats[k.kanji]; if((s?s.level:0)!==activeFilter) return false; }
+      return true;
+    });
+    document.getElementById('ctrlCount').textContent=filtered.length+' kanji';
+    grid.innerHTML=filtered.map(k=>{
+      const s=allStats[k.kanji]; const lvl=s?s.level:0;
+      const pct=s&&s.avg!==null?Math.round(s.avg*100):0;
+      return `<div class="k-cell" data-level="${lvl}" title="${k.keyword} · ${pct}%" onclick="openModal('${k.kanji}')">${k.kanji}</div>`;
+    }).join('');
+  }
+
+  function setFilter(level){ activeFilter=level; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',String(b.dataset.level)===String(level))); renderGrid(); }
+  function resizeCells(val){ document.documentElement.style.setProperty('--cell-size',val+'px'); }
+  document.getElementById('searchInput').addEventListener('input',e=>{ searchQ=e.target.value.trim(); renderGrid(); });
+
+  // ── MODAL ──
+  function openModal(kanji) {
+    const k = allKanji.find(x=>x.kanji===kanji); if(!k) return;
+    const s = allStats[k]||allStats[k.kanji]||{level:0,avg:null,srsSeen:0};
+    const mnem = getMnemonic(k.kanji);
+    const onTags  = k.on  ? k.on.split(/[、,，\s]+/).filter(Boolean).map(r=>`<span class="reading-tag">${r}</span>`).join('') : '—';
+    const kunTags = k.kun ? k.kun.split(/[、,，\s]+/).filter(Boolean).map(r=>`<span class="reading-tag">${r}</span>`).join('') : '—';
+    const wordsHTML = k.words.length
+      ? k.words.map(w=>`<div class="modal-word-row">
+          <a class="mwr-word" href="https://jisho.org/search/${encodeURIComponent(w.word)}" target="_blank" rel="noopener">${w.word}</a>
+          <div class="mwr-info"><div class="mwr-reading">${w.reading}</div><div class="mwr-meaning">${w.meaning}</div></div>
+        </div>`).join('')
+      : `<div style="font-family:var(--font-mono);font-size:.7rem;color:var(--muted)">Nessuna parola</div>`;
+
+    const mnemoHTML = mnem
+      ? `<div class="modal-mnemonic-box" id="mm-display">${escHtml(mnem)}</div>
+         <div style="margin-top:.4rem;display:flex;gap:.5rem">
+           <button class="modal-mnemonic-add" onclick="toggleModalMnemoEdit('${k.kanji}','${escHtml(mnem)}')">modifica</button>
+         </div>
+         <div class="modal-mnemonic-textarea" id="mm-edit">
+           <textarea id="mm-ta" rows="3">${escHtml(mnem)}</textarea>
+           <button class="modal-mnemonic-add" onclick="saveModalMnemo('${k.kanji}')">salva</button>
+         </div>`
+      : `<button class="modal-mnemonic-add" id="mm-add-btn" onclick="toggleModalMnemoEdit('${k.kanji}','')">aggiungi mnemonico</button>
+         <div class="modal-mnemonic-textarea" id="mm-edit">
+           <textarea id="mm-ta" placeholder="Scrivi un mnemonico…" rows="3"></textarea>
+           <button class="modal-mnemonic-add" onclick="saveModalMnemo('${k.kanji}')">salva</button>
+         </div>`;
+
+    document.getElementById('modalBox').innerHTML=`
+      <div class="modal-header">
+        <div style="display:flex;align-items:baseline;gap:.8rem">
+          <div class="modal-kanji">${k.kanji}</div>
+          <div class="modal-keyword">${k.keyword}</div>
+        </div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-section"><div class="modal-label">Significati</div><div class="modal-value" style="font-size:.85rem;color:var(--paper2)">${k.meanings||'—'}</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+          <div class="modal-section"><div class="modal-label">On-yomi</div><div class="modal-value readings">${onTags}</div></div>
+          <div class="modal-section"><div class="modal-label">Kun-yomi</div><div class="modal-value readings">${kunTags}</div></div>
+        </div>
+        <div class="modal-section"><div class="modal-label">Parole comuni</div><div class="modal-words">${wordsHTML}</div></div>
+        <div class="modal-section"><div class="modal-label">🧠 Mnemonico</div>${mnemoHTML}</div>
+      </div>
+      <div class="modal-actions">
+        <a class="modal-btn primary" href="kanji.html?k=${encodeURIComponent(k.kanji)}">Dettaglio completo →</a>
+        <a class="modal-btn" href="flashcard.html">Studia ora</a>
+      </div>`;
+    document.getElementById('modalOverlay').classList.add('show');
+    document.body.style.overflow='hidden';
+  }
+
+  function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); document.body.style.overflow=''; }
+
+  function toggleModalMnemoEdit(kanji, existing) {
+    const edit=document.getElementById('mm-edit'); if(!edit) return;
+    const ta=document.getElementById('mm-ta'); if(ta&&!ta.value&&existing) ta.value=existing;
+    edit.classList.toggle('show');
+  }
+  function saveModalMnemo(kanji) {
+    const ta=document.getElementById('mm-ta'); if(!ta) return;
+    setMnemonic(kanji,ta.value);
+    const disp=document.getElementById('mm-display');
+    if(disp) disp.textContent=ta.value;
+    document.getElementById('mm-edit').classList.remove('show');
+    // Riapri modal aggiornato
+    setTimeout(()=>openModal(kanji),200);
+  }
+  function escHtml(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;'); }
+
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+  initSync(); init();
+</script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flashcard — KanjiBaby</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Hina+Mincho&family=Klee+One&family=Zen+Kurenaido&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --ink:#0f0e0d; --paper:#f5f0e8; --paper2:#d8d0c4;
+      --vermillion:#c0392b; --gold:#b8860b;
+      --muted:#9a9088; --border:#333028; --card-bg:#1c1915;
+      --correct:#27ae60; --wrong:#c0392b;
+      --font-jp:'Shippori Mincho',serif;
+      --font-mono:'DM Mono',monospace;
+      --font-sans:'Noto Sans JP',sans-serif;
+    }
+    :root[data-font="hina"] { --font-jp:'Hina Mincho',serif; }
+    :root[data-font="klee"] { --font-jp:'Klee One',cursive; }
+    :root[data-font="zen"]  { --font-jp:'Zen Kurenaido',sans-serif; }
+    :root[data-theme="light"]{
+      --ink:#f0ebe0; --paper:#1a1714; --paper2:#3a3228;
+      --border:#c8bfb0; --card-bg:#e8e0d4; --muted:#6a5f52;
+    }
+    body{background:var(--ink);color:var(--paper);font-family:var(--font-sans);font-weight:300;min-height:100vh;display:flex;flex-direction:column;}
+
+    .topnav{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2rem;border-bottom:1px solid var(--border);}
+    .back-link{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);text-decoration:none;letter-spacing:.1em;transition:color .2s;}
+    .back-link:hover{color:var(--paper);}
+    .topnav-title{font-family:var(--font-jp);font-size:1rem;font-weight:600;}
+    .topnav-right{font-family:var(--font-mono);font-size:.65rem;color:var(--muted);text-align:right;}
+    #queueCount{color:var(--vermillion);font-size:.85rem;}
+
+    .progress-bar-wrap{height:3px;background:var(--border);}
+    .progress-bar-fill{height:100%;background:var(--vermillion);width:0%;transition:width .4s ease;}
+
+    main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;gap:1.5rem;}
+
+    /* ── CARD ── */
+    .card-scene{width:100%;max-width:480px;perspective:1200px;}
+    .card{position:relative;width:100%;min-height:320px;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1);cursor:pointer;}
+    .card.flipped{transform:rotateY(180deg);}
+    .card-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:12px;border:1px solid var(--border);background:var(--card-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;overflow:hidden;}
+    .card-back{transform:rotateY(180deg);align-items:flex-start;justify-content:flex-start;padding:1.8rem 2rem;}
+
+    .card-kanji-big{font-family:var(--font-jp);font-size:clamp(5rem,18vw,8rem);font-weight:800;color:var(--paper);line-height:1;letter-spacing:-.02em;margin-bottom:1rem;}
+    .card-hint{font-family:var(--font-mono);font-size:.6rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-top:.5rem;}
+    .card-number-badge{position:absolute;top:1rem;right:1.2rem;font-family:var(--font-mono);font-size:.6rem;color:var(--muted);letter-spacing:.1em;}
+
+    .back-section{width:100%;margin-bottom:1rem;}
+    .back-label{font-family:var(--font-mono);font-size:.55rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase;margin-bottom:.3rem;}
+    .back-value{font-family:var(--font-jp);font-size:1rem;color:var(--paper);line-height:1.5;}
+    .back-value.keyword{font-size:1.4rem;font-weight:600;color:var(--vermillion);}
+    .back-value.readings{font-size:.95rem;color:var(--paper2);}
+    .back-divider{width:100%;height:1px;background:var(--border);margin:.8rem 0;}
+
+    /* Kanji decorativo retro — più visibile */
+    .back-kanji-small{position:absolute;bottom:.8rem;right:1rem;font-family:var(--font-jp);font-size:3.5rem;font-weight:800;color:rgba(255,255,255,0.12);pointer-events:none;line-height:1;}
+    :root[data-theme="light"] .back-kanji-small{color:rgba(0,0,0,0.08);}
+
+    /* ── PAROLE (retro card) ── */
+    .words-toggle-btn{font-family:var(--font-mono);font-size:.62rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:4px;padding:.28rem .65rem;cursor:pointer;transition:all .2s;margin-bottom:.6rem;}
+    .words-toggle-btn:hover{color:var(--paper);border-color:var(--muted);}
+    .words-area{display:none;flex-wrap:wrap;gap:.4rem;width:100%;}
+    .words-area.show{display:flex;}
+    .word-chip{font-family:var(--font-jp);font-size:.88rem;background:#232018;border:1px solid var(--border);border-radius:4px;padding:.25rem .55rem;color:var(--paper);text-decoration:none;transition:background .2s,border-color .2s,color .2s;display:inline-flex;flex-direction:column;gap:.05rem;}
+    :root[data-theme="light"] .word-chip{background:var(--ink);}
+    .word-chip:hover{border-color:var(--gold);color:var(--gold);}
+    .word-chip .wc-word{font-size:.9rem;}
+    .word-chip .wc-read{font-size:.65rem;color:var(--muted);}
+
+    /* ── MNEMONIC ── */
+    .mnemonic-wrap{width:100%;max-width:480px;}
+    .mnemonic-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;}
+    .mnemonic-label{font-family:var(--font-mono);font-size:.6rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;}
+    .mnemonic-toggle-btn{font-family:var(--font-mono);font-size:.6rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:4px;padding:.25rem .6rem;cursor:pointer;transition:all .2s;}
+    .mnemonic-toggle-btn:hover{color:var(--paper);border-color:var(--muted);}
+    .mnemonic-content{display:none;}
+    .mnemonic-content.visible{display:block;}
+    #mnemonicText{width:100%;min-height:70px;background:#1a1714;border:1px solid var(--border);border-radius:6px;color:var(--paper);font-family:var(--font-mono);font-size:.78rem;padding:.7rem .9rem;resize:vertical;outline:none;transition:border-color .2s;line-height:1.5;}
+    #mnemonicText:focus{border-color:var(--vermillion);}
+    #mnemonicText::placeholder{color:var(--muted);font-style:italic;}
+    .mnemonic-save-btn{margin-top:.4rem;font-family:var(--font-mono);font-size:.65rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:4px;padding:.3rem .8rem;cursor:pointer;transition:all .2s;}
+    .mnemonic-save-btn:hover{color:var(--paper);border-color:var(--muted);}
+    .mnemonic-save-btn.saved{color:var(--correct);border-color:var(--correct);}
+
+    /* ── ANSWER ── */
+    .answer-area{width:100%;max-width:480px;display:flex;flex-direction:column;align-items:center;gap:.8rem;}
+    .flip-btn{width:100%;padding:.9rem;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;color:var(--paper);font-family:var(--font-mono);font-size:.8rem;letter-spacing:.1em;cursor:pointer;transition:background .2s,border-color .2s;}
+    .flip-btn:hover{background:#2a2520;border-color:var(--muted);}
+    .answer-btns{width:100%;display:none;gap:.8rem;}
+    .answer-btns.show{display:flex;}
+    .btn-correct,.btn-wrong{flex:1;padding:.9rem;border:none;border-radius:8px;font-family:var(--font-mono);font-size:.9rem;letter-spacing:.08em;cursor:pointer;transition:opacity .2s,transform .15s;}
+    .btn-correct:hover,.btn-wrong:hover{opacity:.85;transform:translateY(-1px);}
+    .btn-correct{background:var(--correct);color:#fff;}
+    .btn-wrong{background:var(--wrong);color:#fff;}
+
+    /* ── EMPTY / LOADING ── */
+    #loadingState{display:flex;flex-direction:column;align-items:center;gap:1rem;color:var(--muted);font-family:var(--font-mono);font-size:.75rem;letter-spacing:.15em;}
+    .loader{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--vermillion);border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    #emptyState{display:none;flex-direction:column;align-items:center;gap:1.2rem;text-align:center;}
+    .empty-title{font-family:var(--font-jp);font-size:1.5rem;font-weight:600;}
+    .empty-sub{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);line-height:1.7;}
+    .empty-stats{display:flex;gap:2rem;margin-top:.5rem;}
+    .empty-stat{display:flex;flex-direction:column;align-items:center;gap:.2rem;}
+    .empty-stat-val{font-family:var(--font-jp);font-size:1.8rem;font-weight:600;}
+    .empty-stat-lbl{font-family:var(--font-mono);font-size:.58rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;}
+
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(4rem);background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:.7rem 1.4rem;font-family:var(--font-mono);font-size:.75rem;color:var(--paper);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:50;white-space:nowrap;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .correct-col{color:var(--correct);} .wrong-col{color:var(--wrong);}
+
+    @media(max-width:520px){.card-face{padding:1.5rem;}}
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="index.html" class="back-link">← home</a>
+  <div class="topnav-title">読む · Flashcard</div>
+  <div class="topnav-right">Da rivedere<br><span id="queueCount">–</span></div>
+</nav>
+<div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar"></div></div>
+
+<main id="mainArea">
+  <div id="loadingState"><div class="loader"></div>CARICAMENTO…</div>
+
+  <div id="emptyState">
+    <div style="font-size:3rem">🎉</div>
+    <div class="empty-title">Sessione completata!</div>
+    <div class="empty-sub">Nessun kanji da rivedere adesso.<br>Il SRS deciderà quando è il momento giusto.</div>
+    <div class="empty-stats">
+      <div class="empty-stat"><div class="empty-stat-val" id="sess-correct">0</div><div class="empty-stat-lbl">Sì</div></div>
+      <div class="empty-stat"><div class="empty-stat-val" id="sess-wrong">0</div><div class="empty-stat-lbl">No</div></div>
+      <div class="empty-stat"><div class="empty-stat-val" id="sess-total">0</div><div class="empty-stat-lbl">Totali</div></div>
+    </div>
+  </div>
+
+  <div class="card-scene" id="cardScene" style="display:none">
+    <div class="card" id="flashcard" onclick="flipCard()">
+      <div class="card-face card-front">
+        <div class="card-number-badge" id="cardBadge">#1</div>
+        <div class="card-kanji-big" id="cardKanji">漢</div>
+        <div class="card-hint">tocca per girare</div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-number-badge" id="cardBadgeBack">#1</div>
+        <div class="back-section">
+          <div class="back-label">Heisig Keyword</div>
+          <div class="back-value keyword" id="backKeyword">–</div>
+        </div>
+        <div class="back-divider"></div>
+        <div class="back-section">
+          <div class="back-label">Significati</div>
+          <div class="back-value" id="backMeanings">–</div>
+        </div>
+        <div class="back-section" id="backOnWrap">
+          <div class="back-label">On-yomi</div>
+          <div class="back-value readings" id="backOn">–</div>
+        </div>
+        <div class="back-section" id="backKunWrap">
+          <div class="back-label">Kun-yomi</div>
+          <div class="back-value readings" id="backKun">–</div>
+        </div>
+        <!-- Parole button -->
+        <div class="back-section" id="backWordsSection" style="display:none">
+          <button class="words-toggle-btn" id="wordsToggleBtn" onclick="event.stopPropagation();toggleWords()">mostra parole</button>
+          <div class="words-area" id="wordsArea"></div>
+        </div>
+        <div class="back-kanji-small" id="backKanjiSmall">漢</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mnemonic-wrap" id="mnemonicWrap" style="display:none">
+    <div class="mnemonic-header">
+      <span class="mnemonic-label">🧠 Mnemonico</span>
+      <button class="mnemonic-toggle-btn" id="mnemonicToggleBtn" onclick="toggleMnemonic()">mostra</button>
+    </div>
+    <div class="mnemonic-content" id="mnemonicContent">
+      <textarea id="mnemonicText" placeholder="Scrivi un mnemonico…" rows="3"></textarea>
+      <button class="mnemonic-save-btn" id="mnemonicSaveBtn" onclick="saveMnemonic()">salva</button>
+    </div>
+  </div>
+
+  <div class="answer-area" id="answerArea" style="display:none">
+    <button class="flip-btn" id="flipBtn" onclick="flipCard()">Gira la carta →</button>
+    <div class="answer-btns" id="answerBtns">
+      <button class="btn-wrong"   onclick="answer(false)">✗ &nbsp;No</button>
+      <button class="btn-correct" onclick="answer(true)">✓ &nbsp;Sì</button>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/db.js"></script>
+<script>
+  initSync();
+
+  let queue=[], currentIndex=0, isFlipped=false;
+  let sessionCorrect=0, sessionWrong=0, sessionTotal=0;
+  let mnemoVisible=false, wordsVisible=false;
+
+  async function init() {
+    const db = await loadDB();
+    if (!db.length) { showToast('Errore DB',3000); return; }
+    const active = getActiveKanji();
+    queue = getDueKanji(active);
+    document.getElementById('queueCount').textContent = queue.length;
+    document.getElementById('loadingState').style.display='none';
+    queue.length ? showCard(0) : showEmpty();
+  }
+
+  function showCard(idx) {
+    if (idx >= queue.length) { showEmpty(); return; }
+    isFlipped=false; mnemoVisible=false; wordsVisible=false;
+    const k = queue[idx];
+    document.getElementById('flashcard').classList.remove('flipped');
+    document.getElementById('cardKanji').textContent      = k.kanji;
+    document.getElementById('cardBadge').textContent      = `#${k.id}`;
+    document.getElementById('cardBadgeBack').textContent  = `#${k.id}`;
+    document.getElementById('backKanjiSmall').textContent = k.kanji;
+    document.getElementById('backKeyword').textContent    = k.keyword||'—';
+    document.getElementById('backMeanings').textContent   = k.meanings||'—';
+    const onEl=document.getElementById('backOn'), kunEl=document.getElementById('backKun');
+    const onW=document.getElementById('backOnWrap'), kunW=document.getElementById('backKunWrap');
+    k.on  ? (onEl.textContent=k.on,   onW.style.display='block')  : (onW.style.display='none');
+    k.kun ? (kunEl.textContent=k.kun, kunW.style.display='block') : (kunW.style.display='none');
+
+    // Parole
+    const ws = document.getElementById('backWordsSection');
+    const wa = document.getElementById('wordsArea');
+    const wtb = document.getElementById('wordsToggleBtn');
+    if (k.words && k.words.length) {
+      wa.innerHTML = k.words.map(w =>
+        `<a class="word-chip" href="https://jisho.org/search/${encodeURIComponent(w.word)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
+          <span class="wc-word">${w.word}</span>
+          <span class="wc-read">${w.reading}</span>
+        </a>`).join('');
+      wa.classList.remove('show');
+      wtb.textContent='mostra parole';
+      ws.style.display='block';
+    } else { ws.style.display='none'; }
+
+    // Mnemonico
+    document.getElementById('mnemonicText').value = getMnemonic(k.kanji);
+    document.getElementById('mnemonicContent').classList.remove('visible');
+    document.getElementById('mnemonicToggleBtn').textContent='mostra';
+    document.getElementById('mnemonicSaveBtn').classList.remove('saved');
+
+    document.getElementById('flipBtn').style.display='block';
+    document.getElementById('answerBtns').classList.remove('show');
+    document.getElementById('cardScene').style.display='block';
+    document.getElementById('mnemonicWrap').style.display='block';
+    document.getElementById('answerArea').style.display='flex';
+    document.getElementById('emptyState').style.display='none';
+    updateProgress(idx);
+  }
+
+  function flipCard() {
+    if (isFlipped) return;
+    isFlipped=true;
+    document.getElementById('flashcard').classList.add('flipped');
+    document.getElementById('flipBtn').style.display='none';
+    document.getElementById('answerBtns').classList.add('show');
+  }
+
+  function answer(correct) {
+    const k=queue[currentIndex];
+    updateSRS(k.kanji, correct);
+    sessionTotal++; correct ? sessionCorrect++ : sessionWrong++;
+    if (!correct) { const ri=Math.min(currentIndex+4,queue.length); queue.splice(ri,0,{...k}); }
+    document.getElementById('queueCount').textContent = queue.length-currentIndex-1;
+    const rec=getSRSRecord(k.kanji);
+    showToast(correct
+      ? `<span class="correct-col">✓ Sì</span> — ripasso tra ${rec.interval||1}gg`
+      : `<span class="wrong-col">✗ No</span> — riappare tra poco`, 1800);
+    currentIndex++; showCard(currentIndex);
+  }
+
+  function toggleWords() {
+    wordsVisible=!wordsVisible;
+    document.getElementById('wordsArea').classList.toggle('show', wordsVisible);
+    document.getElementById('wordsToggleBtn').textContent = wordsVisible ? 'nascondi parole' : 'mostra parole';
+  }
+  function toggleMnemonic() {
+    mnemoVisible=!mnemoVisible;
+    document.getElementById('mnemonicContent').classList.toggle('visible', mnemoVisible);
+    document.getElementById('mnemonicToggleBtn').textContent=mnemoVisible?'nascondi':'mostra';
+  }
+  function saveMnemonic() {
+    const k=queue[currentIndex]; if(!k) return;
+    setMnemonic(k.kanji, document.getElementById('mnemonicText').value);
+    const btn=document.getElementById('mnemonicSaveBtn');
+    btn.textContent='salvato ✓'; btn.classList.add('saved');
+    setTimeout(()=>{btn.textContent='salva';btn.classList.remove('saved');},1800);
+  }
+
+  function updateProgress(idx) {
+    document.getElementById('progressBar').style.width = (queue.length ? Math.round(idx/queue.length*100) : 0)+'%';
+  }
+  function showEmpty() {
+    ['cardScene','mnemonicWrap','answerArea'].forEach(id=>{
+      const el=document.getElementById(id);
+      el.style.display='none'; el.classList && el.classList.remove('show');
+    });
+    document.getElementById('emptyState').style.display='flex';
+    document.getElementById('progressBar').style.width='100%';
+    document.getElementById('sess-correct').textContent=sessionCorrect;
+    document.getElementById('sess-wrong').textContent=sessionWrong;
+    document.getElementById('sess-total').textContent=sessionTotal;
+  }
+  function showToast(html,ms) {
+    const t=document.getElementById('toast'); t.innerHTML=html;
+    t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),ms||1800);
+  }
+  document.addEventListener('keydown',e=>{
+    if(e.key===' '||e.key==='Enter'){e.preventDefault();if(!isFlipped)flipCard();}
+    if(e.key==='ArrowRight'&&isFlipped) answer(true);
+    if(e.key==='ArrowLeft' &&isFlipped) answer(false);
+  });
+
+  init();
+</script>
+</body>
+</html>
