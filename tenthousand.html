@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>10k — KanjiBaby</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Hina+Mincho&family=Klee+One&family=Zen+Kurenaido&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --ink:#0f0e0d;--paper:#f5f0e8;--paper2:#d8d0c4;
+      --vermillion:#c0392b;--gold:#b8860b;
+      --muted:#9a9088;--border:#333028;--card-bg:#1c1915;
+      --correct:#27ae60;--wrong:#c0392b;
+      --font-jp:'Shippori Mincho',serif;--font-mono:'DM Mono',monospace;--font-sans:'Noto Sans JP',sans-serif;
+    }
+    :root[data-font="hina"]{--font-jp:'Hina Mincho',serif;}
+    :root[data-font="klee"]{--font-jp:'Klee One',cursive;}
+    :root[data-font="zen"] {--font-jp:'Zen Kurenaido',sans-serif;}
+    :root[data-theme="light"]{--ink:#f0ebe0;--paper:#1a1714;--paper2:#3a3228;--border:#c8bfb0;--card-bg:#e8e0d4;--muted:#6a5f52;}
+    body{background:var(--ink);color:var(--paper);font-family:var(--font-sans);font-weight:300;min-height:100vh;display:flex;flex-direction:column;}
+
+    .topnav{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .back-link{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);text-decoration:none;letter-spacing:.1em;transition:color .2s;}
+    .back-link:hover{color:var(--paper);}
+    .topnav-title{font-family:var(--font-jp);font-size:1rem;font-weight:600;}
+    .mode-pill{font-family:var(--font-mono);font-size:.55rem;padding:.15rem .5rem;border-radius:3px;border:1px solid;display:inline-block;margin-top:.2rem;}
+    .mode-pill.srs   {color:#3498db;border-color:#3498db;}
+    .mode-pill.new   {color:var(--correct);border-color:var(--correct);}
+    .mode-pill.random{color:var(--gold);border-color:var(--gold);}
+
+    main{flex:1;display:flex;flex-direction:column;align-items:center;padding:1.5rem;gap:1.2rem;overflow-y:auto;}
+
+    /* ── SETUP ── */
+    .setup-card{width:100%;max-width:500px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:2rem;display:flex;flex-direction:column;gap:1.5rem;}
+    .setup-title{font-family:var(--font-jp);font-size:1.6rem;font-weight:600;}
+    .setup-section{display:flex;flex-direction:column;gap:.6rem;}
+    .setup-label{font-family:var(--font-mono);font-size:.58rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;}
+    .mode-btns,.diff-btns{display:flex;gap:.5rem;flex-wrap:wrap;}
+    .mode-btn,.diff-btn{font-family:var(--font-mono);font-size:.72rem;padding:.5rem 1rem;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;}
+    .mode-btn:hover,.diff-btn:hover{color:var(--paper);border-color:var(--muted);}
+    .mode-btn.active{color:var(--paper);border-color:var(--vermillion);background:rgba(192,57,43,.1);}
+    .diff-btn.active{color:var(--paper);border-color:var(--gold);background:rgba(184,134,11,.1);}
+    .start-btn{width:100%;padding:.9rem;background:var(--vermillion);border:none;border-radius:8px;color:#fff;font-family:var(--font-mono);font-size:.9rem;letter-spacing:.1em;cursor:pointer;transition:opacity .2s;}
+    .start-btn:hover{opacity:.85;}
+    .record-row{display:flex;gap:2rem;padding-top:.5rem;border-top:1px solid var(--border);flex-wrap:wrap;}
+    .rec-item{display:flex;flex-direction:column;gap:.1rem;}
+    .rec-val{font-family:var(--font-jp);font-size:1.4rem;font-weight:600;}
+    .rec-lbl{font-family:var(--font-mono);font-size:.55rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;}
+    .mode-note{font-family:var(--font-mono);font-size:.66rem;color:var(--muted);line-height:1.5;padding:.6rem .8rem;border:1px solid var(--border);border-radius:5px;background:rgba(255,255,255,.02);}
+
+    /* ── HUD ── */
+    .game-hud{width:100%;max-width:600px;display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;font-family:var(--font-mono);font-size:.75rem;}
+    .hud-score span{color:var(--gold);font-size:1.1rem;font-weight:600;}
+    .hud-lives{display:flex;gap:.3rem;}
+    .life{font-size:1rem;transition:opacity .3s;}
+    .life.lost{opacity:.2;}
+    .hud-end-btn{background:none;border:1px solid var(--border);border-radius:4px;padding:.3rem .7rem;color:var(--muted);font-family:var(--font-mono);font-size:.65rem;cursor:pointer;transition:all .2s;}
+    .hud-end-btn:hover{color:var(--paper);border-color:var(--muted);}
+
+    /* ── FRASE CON BLANK ── */
+    .sentence-card{width:100%;max-width:600px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:1.8rem 2rem;display:flex;flex-direction:column;gap:1rem;}
+    .sc-def-label{font-family:var(--font-mono);font-size:.55rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;}
+    .sc-def{font-family:var(--font-sans);font-size:.9rem;color:var(--gold);line-height:1.5;}
+    .sc-sentence{font-family:var(--font-jp);font-size:clamp(1.1rem,3.5vw,1.5rem);color:var(--paper);line-height:1.9;}
+    .blank{display:inline-block;min-width:3em;border-bottom:2px solid var(--vermillion);color:var(--vermillion);font-weight:600;text-align:center;vertical-align:bottom;padding:0 .2em;}
+    .sc-progress{font-family:var(--font-mono);font-size:.6rem;color:var(--muted);text-align:right;}
+
+    /* ── INPUT ── */
+    .input-area{width:100%;max-width:600px;display:flex;gap:.6rem;}
+    #answerInput{flex:1;padding:.75rem 1rem;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;color:var(--paper);font-family:var(--font-jp);font-size:1.2rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+    #answerInput:focus{border-color:var(--vermillion);box-shadow:0 0 0 3px rgba(192,57,43,.12);}
+    #answerInput.flash-ok {border-color:var(--correct);box-shadow:0 0 0 3px rgba(39,174,96,.2);}
+    #answerInput.flash-err{border-color:var(--wrong);box-shadow:0 0 0 3px rgba(192,57,43,.2);}
+    .submit-btn{padding:.75rem 1.3rem;background:var(--vermillion);border:none;border-radius:8px;color:#fff;font-family:var(--font-mono);font-size:.85rem;cursor:pointer;transition:opacity .2s;flex-shrink:0;}
+    .submit-btn:hover{opacity:.85;}
+
+    /* ── ACTION BTNS ── */
+    .action-row{width:100%;max-width:600px;display:flex;gap:.6rem;}
+    .act-btn{flex:1;padding:.7rem;border-radius:7px;border:1px solid var(--border);background:var(--card-bg);color:var(--muted);font-family:var(--font-mono);font-size:.75rem;cursor:pointer;transition:all .2s;}
+    .act-btn:hover{color:var(--paper);border-color:var(--muted);}
+    .act-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+    /* ── SOLUZIONE ── */
+    .solution-card{width:100%;max-width:600px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:1.8rem 2rem;display:flex;flex-direction:column;gap:1rem;}
+    .sol-result{font-family:var(--font-mono);font-size:.85rem;padding:.4rem .8rem;border-radius:4px;display:inline-flex;align-items:center;gap:.5rem;width:fit-content;}
+    .sol-result.ok {background:rgba(39,174,96,.12);border:1px solid rgba(39,174,96,.3);color:var(--correct);}
+    .sol-result.err{background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.3);color:var(--wrong);}
+    .sol-word-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+    .sol-word{font-family:var(--font-jp);font-size:2rem;font-weight:800;color:var(--paper);}
+    .sol-word a{color:inherit;text-decoration:none;border-bottom:2px solid var(--gold);transition:color .2s;}
+    .sol-word a:hover{color:var(--gold);}
+    .sol-reading{font-family:var(--font-jp);font-size:1rem;color:var(--vermillion);}
+    .sol-def{font-family:var(--font-sans);font-size:.82rem;color:var(--paper2);line-height:1.5;}
+    .sol-sentence-label{font-family:var(--font-mono);font-size:.55rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;}
+    .sol-sentence{font-family:var(--font-jp);font-size:clamp(1rem,3vw,1.3rem);color:var(--paper);line-height:1.9;}
+    .sol-answer-word{color:var(--correct);font-weight:600;border-bottom:2px solid var(--correct);}
+    .sol-next-btn{width:100%;padding:.85rem;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;color:var(--paper);font-family:var(--font-mono);font-size:.85rem;cursor:pointer;transition:all .2s;}
+    .sol-next-btn:hover{background:#2a2520;border-color:var(--muted);}
+
+    /* ── GAMEOVER ── */
+    .gameover-card{width:100%;max-width:480px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:2rem;display:flex;flex-direction:column;align-items:center;gap:1.2rem;text-align:center;}
+    .go-title{font-family:var(--font-jp);font-size:1.8rem;font-weight:600;}
+    .go-score{font-family:var(--font-jp);font-size:3.5rem;font-weight:800;color:var(--gold);}
+    .go-record{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);}
+    .go-new-record{font-family:var(--font-mono);font-size:.75rem;color:var(--gold);border:1px solid var(--gold);border-radius:4px;padding:.3rem .8rem;}
+    .go-btns{display:flex;gap:.8rem;margin-top:.5rem;}
+    .go-btn{font-family:var(--font-mono);font-size:.78rem;padding:.65rem 1.3rem;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--paper);cursor:pointer;transition:all .2s;}
+    .go-btn:hover{border-color:var(--muted);}
+    .go-btn.primary{background:var(--vermillion);border-color:var(--vermillion);}
+    .go-btn.primary:hover{background:#a93226;}
+
+    /* ── LOADING ── */
+    #loadingState{display:flex;flex-direction:column;align-items:center;gap:1rem;color:var(--muted);font-family:var(--font-mono);font-size:.75rem;letter-spacing:.15em;padding:4rem 0;}
+    .loader{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--vermillion);border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(4rem);background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:.7rem 1.4rem;font-family:var(--font-mono);font-size:.75rem;color:var(--paper);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:50;white-space:nowrap;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="index.html" class="back-link">← home</a>
+  <div class="topnav-title">万 · 10k parole</div>
+  <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);text-align:right">
+    <span id="topCount"></span><br>
+    <span class="mode-pill" id="modePill"></span>
+  </div>
+</nav>
+
+<main id="mainArea">
+  <div id="loadingState"><div class="loader"></div>CARICAMENTO…</div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/db.js"></script>
+<script>
+initSync();
+
+// Mode pill
+const modeLabels = { srs:'🔁 SRS', new:'✨ Nuovi', random:'🎲 Random' };
+const pill = document.getElementById('modePill');
+const sm = getStudyMode();
+pill.textContent = modeLabels[sm]||sm;
+pill.className   = 'mode-pill ' + sm;
+
+// ── STATE ────────────────────────────────────────────────────
+let MODE='hs', LIVES=5;
+let wordList=[], currentQueue=[];
+let idx=0, score=0, lives=LIVES;
+let triedCurrent=false;   // ha provato almeno una volta la parola corrente
+let showingSolution=false;
+
+// ── INIT ────────────────────────────────────────────────────
+async function init() {
+  const words = await load10k();
+  document.getElementById('loadingState').style.display='none';
+  wordList = words;
+  document.getElementById('topCount').textContent = words.length + ' parole';
+  if (!words.length) {
+    document.getElementById('mainArea').innerHTML=
+      `<div style="padding:3rem;text-align:center;font-family:var(--font-mono);font-size:.75rem;color:var(--muted)">
+        Nessuna parola caricata. Assicurati che Sheet3 sia configurato nel file Code.gs.</div>`;
+    return;
+  }
+  showSetup();
+}
+
+// ── SETUP ────────────────────────────────────────────────────
+function showSetup() {
+  const rec = get10kRecord();
+  const m   = getStudyMode();
+  const modeNotes = {
+    srs:    '🔁 Propone parole in scadenza SRS — ripasso intelligente.',
+    new:    '✨ Prima le parole mai viste, poi le SRS in scadenza.',
+    random: '🎲 Ordine casuale — studio generico.'
+  };
+  document.getElementById('mainArea').innerHTML=`
+    <div class="setup-card">
+      <div class="setup-title">万 · 10.000 parole</div>
+      <div class="mode-note">Modalità studio attiva: <b>${modeLabels[m]}</b><br>${modeNotes[m]}<br>
+        Puoi cambiarla in <a href="settings.html" style="color:var(--vermillion)">Impostazioni</a>.</div>
+      <div class="setup-section">
+        <div class="setup-label">Tipo esercizio</div>
+        <div class="mode-btns">
+          <button class="mode-btn ${MODE==='hs'?'active':''}"    onclick="setExMode('hs',this)">🏆 Highscore</button>
+          <button class="mode-btn ${MODE==='study'?'active':''}" onclick="setExMode('study',this)">📚 Studio</button>
+        </div>
+      </div>
+      <div id="modeDesc" style="font-family:var(--font-mono);font-size:.68rem;color:var(--muted);line-height:1.6">${getExModeDesc()}</div>
+      <div class="setup-section" id="livesSection" style="${MODE==='study'?'display:none':''}">
+        <div class="setup-label">Vite</div>
+        <div class="diff-btns">
+          <button class="diff-btn ${LIVES===1?'active':''}"  onclick="setLives(1,this)">1 vita</button>
+          <button class="diff-btn ${LIVES===5?'active':''}"  onclick="setLives(5,this)">5 vite</button>
+          <button class="diff-btn ${LIVES===10?'active':''}" onclick="setLives(10,this)">10 vite</button>
+        </div>
+      </div>
+      <button class="start-btn" onclick="startGame()">Inizia →</button>
+      <div class="record-row">
+        <div class="rec-item"><div class="rec-val" style="color:var(--gold)">${rec}</div><div class="rec-lbl">Record Highscore</div></div>
+        <div class="rec-item"><div class="rec-val">${wordList.length}</div><div class="rec-lbl">Parole totali</div></div>
+      </div>
+    </div>`;
+}
+function getExModeDesc() {
+  return MODE==='hs'
+    ? 'Quante parole riesci a riconoscere prima di esaurire le vite? Ogni risposta sbagliata costa una vita.'
+    : 'Nessun limite di vite. Sbaglia quanto vuoi. Si tiene traccia dei tuoi progressi con SRS per ogni parola.';
+}
+function setExMode(m,el) {
+  MODE=m; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active');
+  const desc=document.getElementById('modeDesc'); if(desc) desc.textContent=getExModeDesc();
+  const ls=document.getElementById('livesSection'); if(ls) ls.style.display=(m==='study'?'none':'');
+}
+function setLives(n,el) {
+  LIVES=n; document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active');
+}
+function startGame() { MODE==='hs' ? startHS() : startStudy(); }
+
+// ── HIGHSCORE MODE ────────────────────────────────────────────
+function startHS() {
+  currentQueue = shuffleArray([...wordList]);
+  idx=0; score=0; lives=LIVES; triedCurrent=false; showingSolution=false;
+  renderGame();
+}
+
+function renderGame() {
+  if (idx>=currentQueue.length || lives<=0) { gameOver(); return; }
+  triedCurrent=false; showingSolution=false;
+  const w=currentQueue[idx];
+  const livesHTML=Array.from({length:LIVES},(_,i)=>`<span class="life${i>=lives?' lost':''}">❤️</span>`).join('');
+
+  // Prepara la frase con blank
+  const fdb = w.fdb || '';
+  const ffra = w.ffra || '';
+  // FdB dovrebbe già avere ___  o simile per il blank, ma la parola va evidenziata
+  const sentenceHTML = fdb
+    ? fdb.replace(/_{2,}|＿+/g, `<span class="blank">${'　'.repeat(Math.max(2,w.parola.length))}</span>`)
+    : ffra.replace(w.parola, `<span class="blank">${'　'.repeat(Math.max(2,w.parola.length))}</span>`);
+
+  document.getElementById('mainArea').innerHTML=`
+    <div class="game-hud">
+      <div class="hud-score">Punti: <span>${score}</span></div>
+      <div class="hud-lives">${livesHTML}</div>
+      <button class="hud-end-btn" onclick="gameOver()">Fine</button>
+    </div>
+    <div class="sentence-card">
+      <div class="sc-def-label">Significato cercato</div>
+      <div class="sc-def">${w.ddef}</div>
+      <div class="sc-def-label" style="margin-top:.5rem">Frase</div>
+      <div class="sc-sentence">${sentenceHTML}</div>
+      <div class="sc-progress">${idx+1} / ${currentQueue.length}</div>
+    </div>
+    <div class="input-area">
+      <input type="text" id="answerInput" placeholder="Scrivi la parola mancante…" autocomplete="off" spellcheck="false" autofocus
+        onkeydown="if(event.key==='Enter')checkAnswer()"/>
+      <button class="submit-btn" onclick="checkAnswer()">→</button>
+    </div>
+    <div class="action-row">
+      <button class="act-btn" id="passaBtn" onclick="passa()" ${triedCurrent?'':'disabled'}>
+        Passa (dopo almeno 1 tentativo)
+      </button>
+    </div>`;
+  setTimeout(()=>{ const i=document.getElementById('answerInput'); if(i) i.focus(); },50);
+}
+
+function checkAnswer() {
+  const inp=document.getElementById('answerInput'); if(!inp||showingSolution) return;
+  const ans=inp.value.trim(); if(!ans) return;
+  const w=currentQueue[idx];
+  triedCurrent=true;
+
+  // Abilita pulsante passa
+  const pb=document.getElementById('passaBtn');
+  if(pb) { pb.disabled=false; pb.textContent='Passa'; }
+
+  const correct = normalizeJP(ans)===normalizeJP(w.parola);
+  if(correct) {
+    score++;
+    inp.classList.add('flash-ok');
+    setTimeout(()=>{ inp.classList.remove('flash-ok'); showSolution(true); },600);
+  } else {
+    lives--;
+    inp.classList.add('flash-err');
+    inp.value='';
+    setTimeout(()=>inp.classList.remove('flash-err'),500);
+    if(lives<=0) { setTimeout(gameOver,800); return; }
+    // Aggiorna vite nell'HUD
+    const ld=document.querySelector('.hud-lives');
+    if(ld) ld.innerHTML=Array.from({length:LIVES},(_,i)=>`<span class="life${i>=lives?' lost':''}">❤️</span>`).join('');
+    // Aggiorna score nell'HUD
+    const sd=document.querySelector('.hud-score span');
+    if(sd) sd.textContent=score;
+  }
+}
+
+function passa() {
+  if(!triedCurrent) { showToast('Prova almeno una volta prima di passare!',1800); return; }
+  showSolution(false);
+}
+
+function showSolution(wasCorrect) {
+  showingSolution=true;
+  const w=currentQueue[idx];
+  // Frase completa con parola evidenziata
+  const ffra = w.ffra||'';
+  const highlightedSentence = ffra.replace(new RegExp(escRe(w.parola),'g'),
+    `<span class="sol-answer-word">${w.parola}</span>`);
+
+  document.getElementById('mainArea').innerHTML=`
+    <div class="game-hud">
+      <div class="hud-score">Punti: <span>${score}</span></div>
+      <div class="hud-lives">${Array.from({length:LIVES},(_,i)=>`<span class="life${i>=lives?' lost':''}">❤️</span>`).join('')}</div>
+      <button class="hud-end-btn" onclick="gameOver()">Fine</button>
+    </div>
+    <div class="solution-card">
+      <div class="sol-result ${wasCorrect?'ok':'err'}">${wasCorrect?'✓ Corretto!':'→ Risposta corretta'}</div>
+      <div class="sol-word-row">
+        <div class="sol-word"><a href="https://jisho.org/search/${encodeURIComponent(w.parola)}" target="_blank" rel="noopener">${w.parola}</a></div>
+        <div class="sol-reading">${w.reading}</div>
+      </div>
+      <div class="sol-def">${w.ddef}</div>
+      <div class="sol-sentence-label">Frase completa</div>
+      <div class="sol-sentence">${highlightedSentence}</div>
+    </div>
+    <button class="sol-next-btn" onclick="nextWord()">Prossima parola →</button>`;
+}
+
+function nextWord() {
+  idx++; renderGame();
+}
+
+function gameOver() {
+  set10kRecord(score);
+  const rec=get10kRecord();
+  const isNew=score>0&&score>=rec;
+  document.getElementById('mainArea').innerHTML=`
+    <div class="gameover-card">
+      <div class="go-title">🏆 Fine partita</div>
+      <div class="go-score">${score}</div>
+      <div class="go-record">Record: ${rec}</div>
+      ${isNew?'<div class="go-new-record">★ Nuovo record!</div>':''}
+      <div class="go-btns">
+        <button class="go-btn primary" onclick="startHS()">Rigioca</button>
+        <button class="go-btn" onclick="showSetup()">Menu</button>
+      </div>
+    </div>`;
+}
+
+// ── STUDIO MODE ───────────────────────────────────────────────
+function startStudy() {
+  currentQueue = get10kQueue(wordList);
+  idx=0; score=0; triedCurrent=false; showingSolution=false;
+  renderStudy();
+}
+
+function renderStudy() {
+  if(idx>=currentQueue.length){ studyDone(); return; }
+  triedCurrent=false; showingSolution=false;
+  const w=currentQueue[idx];
+  const fdb=w.fdb||'';
+  const ffra=w.ffra||'';
+  const sentenceHTML=(fdb||ffra)
+    ? (fdb||ffra).replace(/_{2,}|＿+/g,`<span class="blank">${'　'.repeat(Math.max(2,w.parola.length))}</span>`)
+    : `（nessuna frase disponibile）`;
+  const srsRec=get10kSRSRecord(w.parola);
+  const pct=srsRec.totalSeen?Math.round(srsRec.totalCorrect/srsRec.totalSeen*100):null;
+
+  document.getElementById('mainArea').innerHTML=`
+    <div class="game-hud" style="max-width:600px">
+      <div class="hud-score">✓ <span style="color:var(--correct)">${score}</span></div>
+      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted)">${idx+1}/${currentQueue.length}</div>
+      <button class="hud-end-btn" onclick="studyDone()">Fine</button>
+    </div>
+    <div class="sentence-card" style="max-width:600px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="sc-def-label">Significato cercato</div>
+          <div class="sc-def">${w.ddef}</div>
+        </div>
+        ${pct!==null?`<div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);text-align:right">accuratezza<br><span style="color:var(--paper);font-size:1rem">${pct}%</span></div>`:''}
+      </div>
+      <div class="sc-def-label" style="margin-top:.5rem">Frase</div>
+      <div class="sc-sentence">${sentenceHTML}</div>
+    </div>
+    <div class="input-area" style="max-width:600px">
+      <input type="text" id="answerInput" placeholder="Scrivi la parola mancante…" autocomplete="off" spellcheck="false" autofocus
+        onkeydown="if(event.key==='Enter')checkStudy()"/>
+      <button class="submit-btn" onclick="checkStudy()">→</button>
+    </div>
+    <div class="action-row" style="max-width:600px">
+      <button class="act-btn" id="passaBtn" onclick="passaStudy()" ${triedCurrent?'':'disabled'}>
+        Passa (dopo almeno 1 tentativo)
+      </button>
+    </div>`;
+  setTimeout(()=>{ const i=document.getElementById('answerInput'); if(i) i.focus(); },50);
+}
+
+function checkStudy() {
+  const inp=document.getElementById('answerInput'); if(!inp||showingSolution) return;
+  const ans=inp.value.trim(); if(!ans) return;
+  const w=currentQueue[idx];
+  triedCurrent=true;
+  const pb=document.getElementById('passaBtn');
+  if(pb){ pb.disabled=false; pb.textContent='Passa'; }
+
+  const correct=normalizeJP(ans)===normalizeJP(w.parola);
+  update10k(w.parola, correct);
+  if(correct) score++;
+
+  inp.classList.add(correct?'flash-ok':'flash-err');
+  setTimeout(()=>{ inp.classList.remove('flash-ok','flash-err'); showStudySolution(correct); }, correct?600:400);
+  if(!correct) inp.value='';
+}
+
+function passaStudy() {
+  if(!triedCurrent){ showToast('Prova almeno una volta prima di passare!',1800); return; }
+  // Passa senza registrare (nessun update SRS)
+  showStudySolution(false, true);
+}
+
+function showStudySolution(wasCorrect, wasPassed=false) {
+  showingSolution=true;
+  const w=currentQueue[idx];
+  const ffra=w.ffra||'';
+  const highlighted=ffra.replace(new RegExp(escRe(w.parola),'g'),
+    `<span class="sol-answer-word">${w.parola}</span>`);
+  const resultClass = wasPassed?'err': (wasCorrect?'ok':'err');
+  const resultText  = wasPassed?'→ Passata': (wasCorrect?'✓ Corretto!':'✗ Sbagliato');
+
+  document.getElementById('mainArea').innerHTML=`
+    <div class="game-hud" style="max-width:600px">
+      <div class="hud-score">✓ <span style="color:var(--correct)">${score}</span></div>
+      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted)">${idx+1}/${currentQueue.length}</div>
+      <button class="hud-end-btn" onclick="studyDone()">Fine</button>
+    </div>
+    <div class="solution-card" style="max-width:600px">
+      <div class="sol-result ${resultClass}">${resultText}</div>
+      <div class="sol-word-row">
+        <div class="sol-word"><a href="https://jisho.org/search/${encodeURIComponent(w.parola)}" target="_blank" rel="noopener">${w.parola}</a></div>
+        <div class="sol-reading">${w.reading}</div>
+      </div>
+      <div class="sol-def">${w.ddef}</div>
+      <div class="sol-sentence-label">Frase completa</div>
+      <div class="sol-sentence">${highlighted}</div>
+    </div>
+    <button class="sol-next-btn" onclick="nextStudyWord()">Prossima parola →</button>`;
+}
+
+function nextStudyWord() { idx++; renderStudy(); }
+
+function studyDone() {
+  document.getElementById('mainArea').innerHTML=`
+    <div class="gameover-card">
+      <div class="go-title">📚 Sessione finita</div>
+      <div class="go-score">${score}</div>
+      <div class="go-record" style="font-size:.85rem">parole corrette questa sessione</div>
+      <div class="go-btns">
+        <button class="go-btn primary" onclick="startStudy()">Riprendi</button>
+        <button class="go-btn" onclick="showSetup()">Menu</button>
+      </div>
+    </div>`;
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function normalizeJP(s) {
+  return s.trim()
+    .replace(/[\u30A1-\u30F6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60))
+    .replace(/\s/g,'');
+}
+function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+function showToast(msg,ms){
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),ms||1800);
+}
+function shuffleArray(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+init();
+</script>
+</body>
+</html>

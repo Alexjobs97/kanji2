@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Impostazioni — KanjiBaby</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Hina+Mincho&family=Klee+One&family=Zen+Kurenaido&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --ink:#0f0e0d;--paper:#f5f0e8;--paper2:#d8d0c4;
+      --vermillion:#c0392b;--gold:#b8860b;
+      --muted:#9a9088;--border:#333028;--card-bg:#1c1915;
+      --correct:#27ae60;--wrong:#c0392b;
+      --font-jp:'Shippori Mincho',serif;
+      --font-mono:'DM Mono',monospace;
+      --font-sans:'Noto Sans JP',sans-serif;
+    }
+    :root[data-font="hina"]{--font-jp:'Hina Mincho',serif;}
+    :root[data-font="klee"]{--font-jp:'Klee One',cursive;}
+    :root[data-font="zen"] {--font-jp:'Zen Kurenaido',sans-serif;}
+    :root[data-theme="light"]{
+      --ink:#f0ebe0;--paper:#1a1714;--paper2:#3a3228;
+      --border:#c8bfb0;--card-bg:#e8e0d4;--muted:#6a5f52;
+    }
+    body{background:var(--ink);color:var(--paper);font-family:var(--font-sans);font-weight:300;min-height:100vh;}
+    .topnav{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2rem;border-bottom:1px solid var(--border);}
+    .back-link{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);text-decoration:none;letter-spacing:.1em;transition:color .2s;}
+    .back-link:hover{color:var(--paper);}
+    .topnav-title{font-family:var(--font-jp);font-size:1rem;font-weight:600;}
+    .page{max-width:640px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+    .section{margin-bottom:2.5rem;}
+    .section-label{font-family:var(--font-mono);font-size:.55rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
+    .setting-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--border);}
+    .setting-row:last-child{border-bottom:none;}
+    .row-info{flex:1;}
+    .row-title{font-family:var(--font-sans);font-size:.85rem;color:var(--paper);margin-bottom:.15rem;}
+    .row-desc{font-family:var(--font-mono);font-size:.62rem;color:var(--muted);line-height:1.5;}
+    /* Toggle */
+    .toggle{position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0;}
+    .toggle input{opacity:0;width:0;height:0;}
+    .toggle-slider{position:absolute;inset:0;background:#2a2520;border:1px solid #3a342e;border-radius:24px;transition:background .3s;}
+    .toggle-slider::after{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:transform .3s,background .3s;}
+    .toggle input:checked~.toggle-slider{background:#3d1a17;border-color:var(--vermillion);}
+    .toggle input:checked~.toggle-slider::after{transform:translateX(20px);background:var(--vermillion);}
+    /* Select */
+    .styled-select{background:var(--card-bg);border:1px solid var(--border);border-radius:5px;color:var(--paper);font-family:var(--font-mono);font-size:.75rem;padding:.45rem .8rem;outline:none;cursor:pointer;transition:border-color .2s;appearance:none;min-width:140px;}
+    .styled-select:focus{border-color:var(--vermillion);}
+    .select-wrap{position:relative;}
+    .select-wrap::after{content:'▾';position:absolute;right:.7rem;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:.7rem;}
+    /* Font preview */
+    .font-preview{font-family:var(--font-jp);font-size:2rem;color:var(--paper);margin-top:.5rem;transition:font-family .3s;}
+    /* Radio */
+    .radio-group{display:flex;gap:.5rem;flex-wrap:wrap;}
+    .radio-btn{font-family:var(--font-mono);font-size:.7rem;padding:.4rem .9rem;border-radius:4px;border:1px solid var(--border);background:var(--card-bg);color:var(--muted);cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:.15rem;align-items:flex-start;}
+    .radio-btn:hover{color:var(--paper);border-color:var(--muted);}
+    .radio-btn.active{color:var(--paper);border-color:var(--vermillion);background:rgba(192,57,43,.1);}
+    .radio-btn .rb-label{font-size:.72rem;}
+    .radio-btn .rb-desc{font-size:.6rem;color:var(--muted);line-height:1.3;}
+    .radio-btn.active .rb-desc{color:rgba(245,240,232,.6);}
+    /* Mode indicator */
+    .mode-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--font-mono);font-size:.62rem;padding:.25rem .6rem;border-radius:3px;border:1px solid var(--border);margin-top:.4rem;}
+    .mode-badge.srs   {color:#3498db;border-color:#3498db;background:rgba(52,152,219,.08);}
+    .mode-badge.new   {color:var(--correct);border-color:var(--correct);background:rgba(39,174,96,.08);}
+    .mode-badge.random{color:var(--gold);border-color:var(--gold);background:rgba(184,134,11,.08);}
+    /* Buttons */
+    .btn-row{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.3rem;}
+    .action-btn{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;padding:.55rem 1.1rem;border-radius:5px;border:1px solid var(--border);background:var(--card-bg);color:var(--paper);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:.4rem;}
+    .action-btn:hover{background:#2a2520;border-color:var(--muted);}
+    .action-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .action-btn.upload:hover{color:#2980b9;border-color:#2980b9;}
+    .action-btn.download:hover{color:var(--correct);border-color:var(--correct);}
+    .action-btn.danger:hover{color:var(--wrong);border-color:var(--wrong);}
+    .action-btn .spin{display:inline-block;animation:spin .7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .status-msg{font-family:var(--font-mono);font-size:.65rem;padding:.5rem .8rem;border-radius:4px;margin-top:.6rem;display:none;}
+    .status-msg.ok {background:rgba(39,174,96,.12);border:1px solid rgba(39,174,96,.3);color:var(--correct);}
+    .status-msg.err{background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.3);color:var(--wrong);}
+    .status-msg.show{display:block;}
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="index.html" class="back-link">← home</a>
+  <div class="topnav-title">⚙ Impostazioni</div>
+  <div></div>
+</nav>
+<div class="page">
+
+  <!-- ── MODALITÀ DI STUDIO (universale) ── -->
+  <div class="section">
+    <div class="section-label">Modalità di studio</div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:.9rem;">
+      <div class="row-info">
+        <div class="row-title">Modalità attiva</div>
+        <div class="row-desc">Determina come vengono selezionate le carte in <b>tutte</b> le sezioni del sito (flashcard, scrittura, parole, 10k).</div>
+      </div>
+      <div class="radio-group">
+        <div class="radio-btn" id="mode-srs" onclick="setMode('srs')">
+          <span class="rb-label">🔁 Ripasso SRS</span>
+          <span class="rb-desc">Prima i kanji difficili,<br>poi quelli in scadenza.</span>
+        </div>
+        <div class="radio-btn" id="mode-new" onclick="setMode('new')">
+          <span class="rb-label">✨ Nuovi prima</span>
+          <span class="rb-desc">Prima i mai visti,<br>poi gli SRS scaduti.</span>
+        </div>
+        <div class="radio-btn" id="mode-random" onclick="setMode('random')">
+          <span class="rb-label">🎲 Random</span>
+          <span class="rb-desc">Ordine casuale,<br>studio generico.</span>
+        </div>
+      </div>
+      <div id="modeBadge"></div>
+    </div>
+  </div>
+
+  <!-- ── ASPETTO ── -->
+  <div class="section">
+    <div class="section-label">Aspetto</div>
+    <div class="setting-row">
+      <div class="row-info">
+        <div class="row-title">Modalità scura</div>
+        <div class="row-desc">Sfondo scuro / chiaro</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="darkToggle" onchange="onDarkToggle(this)"/>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;">
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:1rem;">
+        <div class="row-info">
+          <div class="row-title">Font kanji</div>
+          <div class="row-desc">Stile tipografico per i caratteri giapponesi</div>
+        </div>
+        <div class="select-wrap">
+          <select class="styled-select" id="fontSelect" onchange="onFontChange(this.value)">
+            <option value="shippori">Shippori Mincho</option>
+            <option value="hina">Hina Mincho</option>
+            <option value="klee">Klee One</option>
+            <option value="zen">Zen Kurenaido</option>
+          </select>
+        </div>
+      </div>
+      <div class="font-preview" id="fontPreview">漢字学習　日本語</div>
+    </div>
+  </div>
+
+  <!-- ── FILTRI ── -->
+  <div class="section">
+    <div class="section-label">Filtri contenuto</div>
+    <div class="setting-row">
+      <div class="row-info">
+        <div class="row-title">Mostra solo kanji Jōyō</div>
+        <div class="row-desc">Escludi i kanji non-Jōyō da tutte le modalità</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="joyoToggle" onchange="onJoyoToggle(this)"/>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ── SYNC ── -->
+  <div class="section">
+    <div class="section-label">Sincronizzazione dati</div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:.7rem;">
+      <div class="row-info">
+        <div class="row-title">Upload → Cloud</div>
+        <div class="row-desc">Forza l'invio dei dati locali al Google Sheet.</div>
+      </div>
+      <div class="btn-row">
+        <button class="action-btn upload" id="uploadBtn" onclick="doUpload()">↑ Upload al cloud</button>
+      </div>
+      <div class="status-msg" id="uploadStatus"></div>
+    </div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:.7rem;">
+      <div class="row-info">
+        <div class="row-title">Download ← Cloud</div>
+        <div class="row-desc">Sovrascrive i dati locali con quelli del Google Sheet.</div>
+      </div>
+      <div class="btn-row">
+        <button class="action-btn download" id="downloadBtn" onclick="doDownload()">↓ Download dal cloud</button>
+      </div>
+      <div class="status-msg" id="downloadStatus"></div>
+    </div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:.7rem;">
+      <div class="row-info">
+        <div class="row-title">Reset dati locali</div>
+        <div class="row-desc">Cancella tutta la cache locale. I dati sul cloud rimangono.</div>
+      </div>
+      <div class="btn-row">
+        <button class="action-btn danger" onclick="resetAllData()">✕ Cancella dati locali</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/storage.js"></script>
+<script>
+  initSync();
+
+  // Leggi stato corrente
+  document.getElementById('darkToggle').checked = getDarkMode();
+  document.getElementById('fontSelect').value   = getFont();
+  document.getElementById('joyoToggle').checked = !getJoyoFilter();
+
+  const currentMode = getStudyMode();
+  highlightMode(currentMode);
+
+  function highlightMode(m) {
+    ['srs','new','random'].forEach(v => {
+      document.getElementById('mode-'+v).classList.toggle('active', v===m);
+    });
+    const labels = { srs:'🔁 Ripasso SRS', new:'✨ Nuovi prima', random:'🎲 Random' };
+    const badge  = document.getElementById('modeBadge');
+    badge.className = 'mode-badge ' + m;
+    badge.textContent = 'Modalità attiva: ' + labels[m];
+  }
+
+  function setMode(v) {
+    setStudyMode(v);
+    highlightMode(v);
+  }
+
+  function onDarkToggle(el)  { setDarkMode(el.checked); }
+  function onFontChange(f)   { setFont(f); }
+  function onJoyoToggle(el)  { setJoyoFilter(!el.checked); }
+
+  async function doUpload() {
+    const btn=document.getElementById('uploadBtn'), msg=document.getElementById('uploadStatus');
+    btn.disabled=true; btn.innerHTML='<span class="spin">↻</span> Upload…';
+    const res=await forceUpload();
+    btn.disabled=false; btn.innerHTML='↑ Upload al cloud';
+    showStatus(msg, res.ok, res.ok?`Salvati ${res.saved} record.`:`Errore: ${res.error}`);
+  }
+  async function doDownload() {
+    if(!confirm('Sovrascrivere i dati locali con quelli del cloud?')) return;
+    const btn=document.getElementById('downloadBtn'), msg=document.getElementById('downloadStatus');
+    btn.disabled=true; btn.innerHTML='<span class="spin">↻</span> Download…';
+    const res=await forceDownload();
+    btn.disabled=false; btn.innerHTML='↓ Download dal cloud';
+    showStatus(msg, res.ok, res.ok?`Dati ripristinati (${res.count} voci).`:`Errore: ${res.error}`);
+  }
+  function showStatus(el,ok,txt){
+    el.textContent=txt; el.className='status-msg show '+(ok?'ok':'err');
+    setTimeout(()=>el.classList.remove('show'),4000);
+  }
+</script>
+</body>
+</html>
